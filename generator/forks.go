@@ -63,7 +63,7 @@ var ForkConfigs = []ForkConfig{
 		Version:      spec.DataVersionElectra,
 		EpochField:   "ELECTRA_FORK_EPOCH",
 		VersionField: "ELECTRA_FORK_VERSION",
-		BuilderFn:    nil,
+		BuilderFn:    NewElectraBuilder,
 	},
 }
 
