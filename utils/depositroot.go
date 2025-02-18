@@ -4,7 +4,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 
-	"github.com/pk910/eth-beacon-genesis/config"
+	"github.com/ethpandaops/eth-beacon-genesis/config"
 )
 
 func ComputeDepositRoot(config *config.Config) (phase0.Root, error) {

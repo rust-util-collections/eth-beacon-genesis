@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	ssz "github.com/ferranbt/fastssz"
 
-	"github.com/pk910/eth-beacon-genesis/config"
+	"github.com/ethpandaops/eth-beacon-genesis/config"
 )
 
 func ComputeWithdrawalsRoot(withdrawals types.Withdrawals, config *config.Config) (phase0.Root, error) {

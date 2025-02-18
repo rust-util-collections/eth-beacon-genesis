@@ -9,10 +9,10 @@ import (
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/urfave/cli/v3"
 
-	"github.com/pk910/eth-beacon-genesis/config"
-	"github.com/pk910/eth-beacon-genesis/eth1"
-	"github.com/pk910/eth-beacon-genesis/generator"
-	"github.com/pk910/eth-beacon-genesis/validators"
+	"github.com/ethpandaops/eth-beacon-genesis/config"
+	"github.com/ethpandaops/eth-beacon-genesis/eth1"
+	"github.com/ethpandaops/eth-beacon-genesis/generator"
+	"github.com/ethpandaops/eth-beacon-genesis/validators"
 )
 
 var (

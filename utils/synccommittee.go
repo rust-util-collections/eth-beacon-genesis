@@ -9,7 +9,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	blsu "github.com/protolambda/bls12-381-util"
 
-	"github.com/pk910/eth-beacon-genesis/config"
+	"github.com/ethpandaops/eth-beacon-genesis/config"
 )
 
 func GetGenesisSyncCommittee(config *config.Config, validators []*phase0.Validator, randaoMix phase0.Hash32) (*altair.SyncCommittee, error) {

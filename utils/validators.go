@@ -4,8 +4,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 
-	"github.com/pk910/eth-beacon-genesis/config"
-	"github.com/pk910/eth-beacon-genesis/validators"
+	"github.com/ethpandaops/eth-beacon-genesis/config"
+	"github.com/ethpandaops/eth-beacon-genesis/validators"
 )
 
 func GetGenesisValidators(config *config.Config, validators []*validators.Validator) ([]*phase0.Validator, phase0.Root) {

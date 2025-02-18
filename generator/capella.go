@@ -13,10 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/holiman/uint256"
 
+	"github.com/ethpandaops/eth-beacon-genesis/config"
+	"github.com/ethpandaops/eth-beacon-genesis/utils"
+	"github.com/ethpandaops/eth-beacon-genesis/validators"
 	dynssz "github.com/pk910/dynamic-ssz"
-	"github.com/pk910/eth-beacon-genesis/config"
-	"github.com/pk910/eth-beacon-genesis/utils"
-	"github.com/pk910/eth-beacon-genesis/validators"
 )
 
 type capellaBuilder struct {

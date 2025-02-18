@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	hbls "github.com/herumi/bls-eth-go-binary/bls"
 
-	"github.com/pk910/eth-beacon-genesis/config"
-	"github.com/pk910/eth-beacon-genesis/validators"
+	"github.com/ethpandaops/eth-beacon-genesis/config"
+	"github.com/ethpandaops/eth-beacon-genesis/validators"
 )
 
 type NewGenesisBuilderFn func(elGenesis *core.Genesis, clConfig *config.Config) GenesisBuilder

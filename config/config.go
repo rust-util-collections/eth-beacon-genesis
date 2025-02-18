@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/pk910/eth-beacon-genesis/config/presets"
+	"github.com/ethpandaops/eth-beacon-genesis/config/presets"
 )
 
 type Config struct {
