@@ -118,6 +118,7 @@ func (b *electraBuilder) BuildState() (*spec.VersionedBeaconState, error) {
 		ExecutionPayload: &deneb.ExecutionPayload{
 			BaseFeePerGas: uint256.NewInt(0),
 		},
+		ExecutionRequests: &electra.ExecutionRequests{},
 	}
 	genesisBlockBodyRoot, err := genesisBlockBody.HashTreeRoot()
 	if err != nil {
