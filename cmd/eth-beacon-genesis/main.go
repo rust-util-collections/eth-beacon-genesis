@@ -34,12 +34,12 @@ var (
 		Name:  "additional-validators",
 		Usage: "Path to the file with a list of additional genesis validators validators",
 	}
-	outputFlag = &cli.StringFlag{
-		Name:  "output",
+	stateOutputFlag = &cli.StringFlag{
+		Name:  "state-output",
 		Usage: "Path to the file to write the genesis state to in SSZ format",
 	}
-	outputJsonFlag = &cli.StringFlag{
-		Name:  "output-json",
+	jsonOutputFlag = &cli.StringFlag{
+		Name:  "json-output",
 		Usage: "Path to the file to write the genesis state to in JSON format",
 	}
 
@@ -58,7 +58,7 @@ var (
 				Usage: "Generate a devnet genesis state",
 				Flags: []cli.Flag{
 					eth1ConfigFlag, configFlag, mnemonicsFileFlag, validatorsFileFlag,
-					outputFlag, outputJsonFlag, quietFlag,
+					stateOutputFlag, jsonOutputFlag, quietFlag,
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return runDevnet(ctx, cmd)
@@ -81,8 +81,8 @@ func runDevnet(_ context.Context, cmd *cli.Command) error {
 	eth2Config := cmd.String(configFlag.Name)
 	mnemonicsFile := cmd.String(mnemonicsFileFlag.Name)
 	validatorsFile := cmd.String(validatorsFileFlag.Name)
-	outputFile := cmd.String(outputFlag.Name)
-	outputJson := cmd.String(outputJsonFlag.Name)
+	stateOutputFile := cmd.String(stateOutputFlag.Name)
+	jsonOutputFile := cmd.String(jsonOutputFlag.Name)
 	quiet := cmd.Bool(quietFlag.Name)
 
 	elGenesis, err := eth1.LoadEth1GenesisConfig(eth1Config)
@@ -130,25 +130,25 @@ func runDevnet(_ context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to build genesis: %w", err)
 	}
 
-	if outputFile != "" {
+	if stateOutputFile != "" {
 		sszData, err := builder.Serialize(genesisState, http.ContentTypeSSZ)
 		if err != nil {
 			return fmt.Errorf("failed to serialize genesis state: %w", err)
 		}
 
-		os.WriteFile(outputFile, sszData, 0644)
+		os.WriteFile(stateOutputFile, sszData, 0644)
 	}
 
-	if outputJson != "" {
+	if jsonOutputFile != "" {
 		jsonData, err := builder.Serialize(genesisState, http.ContentTypeJSON)
 		if err != nil {
 			return fmt.Errorf("failed to serialize genesis state: %w", err)
 		}
 
-		os.WriteFile(outputJson, jsonData, 0644)
+		os.WriteFile(jsonOutputFile, jsonData, 0644)
 	}
 
-	if outputFile == "" && outputJson == "" {
+	if stateOutputFile == "" && jsonOutputFile == "" {
 		jsonData, err := builder.Serialize(genesisState, http.ContentTypeJSON)
 		if err != nil {
 			return fmt.Errorf("failed to serialize genesis state: %w", err)
