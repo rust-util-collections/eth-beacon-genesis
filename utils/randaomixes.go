@@ -1,0 +1,15 @@
+package utils
+
+import (
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pk910/eth-beacon-genesis/config"
+)
+
+func SeedRandomMixes(genesisBlockHash phase0.Hash32, config *config.Config) []phase0.Root {
+	max := config.GetUintDefault("EPOCHS_PER_HISTORICAL_VECTOR", 65536)
+	randomMixes := make([]phase0.Root, max)
+	for i := range randomMixes {
+		randomMixes[i] = phase0.Root(genesisBlockHash)
+	}
+	return randomMixes
+}
