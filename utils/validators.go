@@ -11,6 +11,12 @@ import (
 func GetGenesisValidators(config *config.Config, validators []*validators.Validator) ([]*phase0.Validator, phase0.Root) {
 	// Process activations
 	maxEffectiveBalance := phase0.Gwei(config.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000))
+	maxEffectiveBalanceElectra := phase0.Gwei(config.GetUintDefault("MAX_EFFECTIVE_BALANCE_ELECTRA", 2_048_000_000_000))
+	isElectraActive := false
+	if electraActivationEpoch, ok := config.GetUint("ELECTRA_FORK_EPOCH"); ok && electraActivationEpoch == 0 {
+		isElectraActive = true
+	}
+
 	clValidators := make([]*phase0.Validator, 0, len(validators))
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
@@ -20,6 +26,17 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 			effectiveBalance = phase0.Gwei(*val.EffectiveBalance)
 		} else {
 			effectiveBalance = maxEffectiveBalance
+		}
+
+		if isElectraActive && val.WithdrawalCredentials[0] == 0x02 {
+			// allow electra validators with 0x02 withdrawal credentials to have a higher max effective balance
+			if effectiveBalance > maxEffectiveBalanceElectra {
+				effectiveBalance = maxEffectiveBalanceElectra
+			}
+		} else {
+			if effectiveBalance > maxEffectiveBalance {
+				effectiveBalance = maxEffectiveBalance
+			}
 		}
 
 		validator := &phase0.Validator{

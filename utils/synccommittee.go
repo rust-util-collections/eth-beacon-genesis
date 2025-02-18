@@ -93,7 +93,7 @@ func computeGenesisSyncCommitteeIndicesElectra(config *config.Config, active []p
 	syncCommitteeSize := config.GetUintDefault("SYNC_COMMITTEE_SIZE", 512)
 	shuffleRoundCount := config.GetUintDefault("SHUFFLE_ROUND_COUNT", 90)
 	maxEffectiveBalance := config.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32000000000)
-	domainSyncCommittee := config.GetBytesDefault("DOMAIN_SYNC_COMMITTEE", []byte{})
+	domainSyncCommittee := config.GetBytesDefault("DOMAIN_SYNC_COMMITTEE", []byte{0x07, 0x00, 0x00, 0x00})
 	syncCommitteeIndices := make([]phase0.ValidatorIndex, 0, syncCommitteeSize)
 	periodSeed := computeGenesisSeed(randaoMix, 0, phase0.DomainType(domainSyncCommittee))
 
