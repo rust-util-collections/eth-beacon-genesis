@@ -67,6 +67,13 @@ var ForkConfigs = []ForkConfig{
 	},
 }
 
+func init() {
+	//nolint:errcheck // ignore
+	hbls.Init(hbls.BLS12_381)
+	//nolint:errcheck // ignore
+	hbls.SetETHmode(hbls.EthModeLatest)
+}
+
 func GetGenesisForkVersion(clConfig *config.Config) spec.DataVersion {
 	for i := len(ForkConfigs) - 1; i >= 1; i-- {
 		if epoch, found := clConfig.GetUint(ForkConfigs[i].EpochField); found && epoch == 0 {
@@ -112,11 +119,4 @@ func NewGenesisBuilder(elGenesis *core.Genesis, clConfig *config.Config) Genesis
 	}
 
 	return forkConfig.BuilderFn(elGenesis, clConfig)
-}
-
-func init() {
-	//nolint:errcheck // ignore
-	hbls.Init(hbls.BLS12_381)
-	//nolint:errcheck // ignore
-	hbls.SetETHmode(hbls.EthModeLatest)
 }

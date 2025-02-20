@@ -6,6 +6,7 @@ require (
 	github.com/attestantio/go-eth2-client v0.24.0
 	github.com/ethereum/go-ethereum v1.15.2
 	github.com/ferranbt/fastssz v0.1.4
+	github.com/herumi/bls-eth-go-binary v1.31.0
 	github.com/holiman/uint256 v1.3.2
 	github.com/pk910/dynamic-ssz v0.0.5
 	github.com/protolambda/bls12-381-util v0.1.0
@@ -41,7 +42,6 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/herumi/bls-eth-go-binary v1.31.0 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
 	github.com/huandu/go-clone v1.6.0 // indirect
 	github.com/kilic/bls12-381 v0.1.0 // indirect

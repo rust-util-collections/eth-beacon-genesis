@@ -13,14 +13,14 @@ import (
 )
 
 type Config struct {
-	values map[string]string
-	preset map[string]string
+	values map[string]interface{}
+	preset map[string]interface{}
 }
 
 func LoadConfig(path string) (*Config, error) {
 	config := &Config{
-		values: make(map[string]string),
-		preset: make(map[string]string),
+		values: make(map[string]interface{}),
+		preset: make(map[string]interface{}),
 	}
 
 	// load config from yaml
@@ -29,8 +29,23 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("reading config file: %w", err)
 	}
 
-	if err := yaml.Unmarshal(data, &config.values); err != nil {
+	values := make(map[string]string)
+	if err := yaml.Unmarshal(data, &values); err != nil {
 		return nil, fmt.Errorf("parsing yaml: %w", err)
+	}
+
+	for key, value := range values {
+		if strings.HasPrefix(value, "0x") {
+			bytes, err := hex.DecodeString(strings.Replace(value, "0x", "", -1))
+			if err != nil {
+				return nil, fmt.Errorf("decoding hex: %w", err)
+			}
+			config.values[key] = bytes
+		} else if val, err := strconv.ParseUint(value, 10, 64); err == nil {
+			config.values[key] = val
+		} else {
+			config.values[key] = value
+		}
 	}
 
 	// load referenced preset
@@ -44,14 +59,29 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("preset '%v' not found: %w", presetName, err)
 	}
 
-	if err := yaml.Unmarshal(presetData, &config.preset); err != nil {
+	presets := make(map[string]string)
+	if err := yaml.Unmarshal(presetData, &presets); err != nil {
 		return nil, fmt.Errorf("failed to parse preset yaml: %w", err)
+	}
+
+	for key, value := range presets {
+		if strings.HasPrefix(value, "0x") {
+			bytes, err := hex.DecodeString(strings.Replace(value, "0x", "", -1))
+			if err != nil {
+				return nil, fmt.Errorf("decoding hex: %w", err)
+			}
+			config.preset[key] = bytes
+		} else if val, err := strconv.ParseUint(value, 10, 64); err == nil {
+			config.preset[key] = val
+		} else {
+			config.preset[key] = value
+		}
 	}
 
 	return config, nil
 }
 
-func (c *Config) Get(key string) (string, bool) {
+func (c *Config) Get(key string) (interface{}, bool) {
 	value, ok := c.values[key]
 
 	if !ok {
@@ -67,7 +97,11 @@ func (c *Config) GetString(key string) (string, bool) {
 		return "", false
 	}
 
-	return value, true
+	if str, ok := value.(string); ok {
+		return str, true
+	}
+
+	return "", false
 }
 
 func (c *Config) GetUint(key string) (uint64, bool) {
@@ -76,7 +110,7 @@ func (c *Config) GetUint(key string) (uint64, bool) {
 		return 0, false
 	}
 
-	if val, err := strconv.ParseUint(value, 10, 64); err == nil {
+	if val, ok := value.(uint64); ok {
 		return val, true
 	}
 
@@ -98,12 +132,11 @@ func (c *Config) GetBytes(key string) ([]byte, bool) {
 		return nil, false
 	}
 
-	bytes, err := hex.DecodeString(strings.Replace(value, "0x", "", -1))
-	if err != nil {
-		return nil, false
+	if bytes, ok := value.([]byte); ok {
+		return bytes, true
 	}
 
-	return bytes, true
+	return nil, false
 }
 
 func (c *Config) GetBytesDefault(key string, defaultVal []byte) []byte {
