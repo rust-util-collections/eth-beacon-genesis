@@ -1,0 +1,7 @@
+
+# final stage
+FROM debian:stable-slim
+WORKDIR /app
+COPY bin/* /app
+ENTRYPOINT ["./eth-beacon-genesis"]
+CMD []
