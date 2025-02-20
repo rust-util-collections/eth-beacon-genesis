@@ -42,7 +42,7 @@ func (b *electraBuilder) AddValidators(validators []*validators.Validator) {
 	b.validators = append(b.validators, validators...)
 }
 
-func (b *electraBuilder) BuildState() (*spec.VersionedBeaconState, error) {
+func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, error) {
 	genesisBlock := b.shadowForkBlock
 	if genesisBlock == nil {
 		genesisBlock = b.elGenesis.ToBlock()
@@ -173,6 +173,12 @@ func (b *electraBuilder) BuildState() (*spec.VersionedBeaconState, error) {
 	versionedState := &spec.VersionedBeaconState{
 		Version: spec.DataVersionElectra,
 		Electra: genesisState,
+	}
+
+	if !quiet {
+		fmt.Printf("genesis version: electra\n")
+		fmt.Printf("genesis time: %v\n", genesisState.GenesisTime)
+		fmt.Printf("genesis validators root: 0x%x\n", genesisState.GenesisValidatorsRoot)
 	}
 
 	return versionedState, nil

@@ -108,14 +108,26 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 	jsonOutputFile := cmd.String(jsonOutputFlag.Name)
 	quiet := cmd.Bool(quietFlag.Name)
 
+	if !quiet {
+		fmt.Printf("eth-beacon-genesis version: %s\n", utils.GetBuildVersion())
+	}
+
 	elGenesis, err := eth1.LoadEth1GenesisConfig(eth1Config)
 	if err != nil {
 		return fmt.Errorf("failed to load execution genesis: %w", err)
 	}
 
+	if !quiet {
+		fmt.Printf("loaded execution genesis. chainid: %v\n", elGenesis.Config.ChainID.String())
+	}
+
 	clConfig, err := config.LoadConfig(eth2Config)
 	if err != nil {
 		return fmt.Errorf("failed to load consensus config: %w", err)
+	}
+
+	if !quiet {
+		fmt.Printf("loaded consensus config. genesis fork version: 0x%x\n", clConfig.GetBytesDefault("GENESIS_FORK_VERSION", []byte{}))
 	}
 
 	var clValidators []*validators.Validator
@@ -145,6 +157,19 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("no validators found")
 	}
 
+	if !quiet {
+		totalBalance := uint64(0)
+		defaultBalance := clConfig.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000)
+		for _, val := range clValidators {
+			if val.Balance != nil {
+				totalBalance += *val.Balance
+			} else {
+				totalBalance += defaultBalance
+			}
+		}
+		fmt.Printf("loaded %d validators. total balance: %d ETH\n", len(clValidators), totalBalance/1_000_000_000)
+	}
+
 	builder := generator.NewGenesisBuilder(elGenesis, clConfig)
 	builder.AddValidators(clValidators)
 
@@ -170,20 +195,31 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 				return fmt.Errorf("failed to parse eth1 block: %w", err)
 			}
 
+			if !quiet {
+				fmt.Printf("loaded shadow fork block from file. hash: %s\n", block.Hash().String())
+			}
 			gensisBlock = block
 		} else {
 			block, err := eth1.GetBlockFromRPC(ctx, shadowForkRPC)
 			if err != nil {
 				return fmt.Errorf("failed to get shadow fork block: %w", err)
 			}
+
+			if !quiet {
+				fmt.Printf("loaded shadow fork block from RPC. hash: %s\n", block.Hash().String())
+			}
 			gensisBlock = block
 		}
 
 		builder.SetShadowForkBlock(gensisBlock)
 	}
-	genesisState, err := builder.BuildState()
+	genesisState, err := builder.BuildState(quiet)
 	if err != nil {
 		return fmt.Errorf("failed to build genesis: %w", err)
+	}
+
+	if !quiet {
+		fmt.Printf("successfully built genesis state.\n")
 	}
 
 	if stateOutputFile != "" {
@@ -193,6 +229,10 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		os.WriteFile(stateOutputFile, sszData, 0644)
+
+		if !quiet {
+			fmt.Printf("serialized genesis state to SSZ file: %s\n", stateOutputFile)
+		}
 	}
 
 	if jsonOutputFile != "" {
@@ -202,6 +242,10 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		os.WriteFile(jsonOutputFile, jsonData, 0644)
+
+		if !quiet {
+			fmt.Printf("serialized genesis state to JSON file: %s\n", jsonOutputFile)
+		}
 	}
 
 	if stateOutputFile == "" && jsonOutputFile == "" {

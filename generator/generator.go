@@ -17,7 +17,7 @@ type NewGenesisBuilderFn func(elGenesis *core.Genesis, clConfig *config.Config) 
 type GenesisBuilder interface {
 	SetShadowForkBlock(block *types.Block)
 	AddValidators(validators []*validators.Validator)
-	BuildState() (*spec.VersionedBeaconState, error)
+	BuildState(quiet bool) (*spec.VersionedBeaconState, error)
 	Serialize(state *spec.VersionedBeaconState, contentType http.ContentType) ([]byte, error)
 }
 
