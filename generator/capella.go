@@ -22,6 +22,7 @@ import (
 type capellaBuilder struct {
 	elGenesis       *core.Genesis
 	clConfig        *config.Config
+	dynSsz          *dynssz.DynSsz
 	shadowForkBlock *types.Block
 	validators      []*validators.Validator
 }
@@ -30,6 +31,7 @@ func NewCapellaBuilder(elGenesis *core.Genesis, clConfig *config.Config) Genesis
 	return &capellaBuilder{
 		elGenesis: elGenesis,
 		clConfig:  clConfig,
+		dynSsz:    utils.GetDynSSZ(clConfig),
 	}
 }
 
@@ -119,7 +121,7 @@ func (b *capellaBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, err
 		},
 		ExecutionPayload: &capella.ExecutionPayload{},
 	}
-	genesisBlockBodyRoot, err := genesisBlockBody.HashTreeRoot()
+	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)
 	}
@@ -190,9 +192,7 @@ func (b *capellaBuilder) Serialize(state *spec.VersionedBeaconState, contentType
 
 	switch contentType {
 	case http.ContentTypeSSZ:
-		spec := b.clConfig.GetSpecs()
-		dynSsz := dynssz.NewDynSsz(spec)
-		return dynSsz.MarshalSSZ(state.Capella)
+		return b.dynSsz.MarshalSSZ(state.Capella)
 	case http.ContentTypeJSON:
 		return state.Capella.MarshalJSON()
 	default:

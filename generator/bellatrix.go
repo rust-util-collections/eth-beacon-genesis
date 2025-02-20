@@ -21,6 +21,7 @@ import (
 type bellatrixBuilder struct {
 	elGenesis       *core.Genesis
 	clConfig        *config.Config
+	dynSsz          *dynssz.DynSsz
 	shadowForkBlock *types.Block
 	validators      []*validators.Validator
 }
@@ -29,6 +30,7 @@ func NewBellatrixBuilder(elGenesis *core.Genesis, clConfig *config.Config) Genes
 	return &bellatrixBuilder{
 		elGenesis: elGenesis,
 		clConfig:  clConfig,
+		dynSsz:    utils.GetDynSSZ(clConfig),
 	}
 }
 
@@ -108,7 +110,7 @@ func (b *bellatrixBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, e
 		},
 		ExecutionPayload: &bellatrix.ExecutionPayload{},
 	}
-	genesisBlockBodyRoot, err := genesisBlockBody.HashTreeRoot()
+	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)
 	}
@@ -179,9 +181,7 @@ func (b *bellatrixBuilder) Serialize(state *spec.VersionedBeaconState, contentTy
 
 	switch contentType {
 	case http.ContentTypeSSZ:
-		spec := b.clConfig.GetSpecs()
-		dynSsz := dynssz.NewDynSsz(spec)
-		return dynSsz.MarshalSSZ(state.Bellatrix)
+		return b.dynSsz.MarshalSSZ(state.Bellatrix)
 	case http.ContentTypeJSON:
 		return state.Bellatrix.MarshalJSON()
 	default:

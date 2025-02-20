@@ -3,7 +3,7 @@ module github.com/ethpandaops/eth-beacon-genesis
 go 1.22.4
 
 require (
-	github.com/attestantio/go-eth2-client v0.24.0
+	github.com/attestantio/go-eth2-client v0.0.0-20250219090147-b41ce952806c
 	github.com/ethereum/go-ethereum v1.15.2
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/herumi/bls-eth-go-binary v1.31.0
@@ -83,3 +83,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
+
+replace github.com/pk910/dynamic-ssz => github.com/pk910/dynamic-ssz v0.0.0-20250218224332-b6fe247b96a3

@@ -19,6 +19,7 @@ import (
 type altairBuilder struct {
 	elGenesis       *core.Genesis
 	clConfig        *config.Config
+	dynSsz          *dynssz.DynSsz
 	shadowForkBlock *types.Block
 	validators      []*validators.Validator
 }
@@ -27,6 +28,7 @@ func NewAltairBuilder(elGenesis *core.Genesis, clConfig *config.Config) GenesisB
 	return &altairBuilder{
 		elGenesis: elGenesis,
 		clConfig:  clConfig,
+		dynSsz:    utils.GetDynSSZ(clConfig),
 	}
 }
 
@@ -70,7 +72,7 @@ func (b *altairBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, erro
 			SyncCommitteeBits: make([]byte, syncCommitteeMaskBytes),
 		},
 	}
-	genesisBlockBodyRoot, err := genesisBlockBody.HashTreeRoot()
+	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)
 	}
@@ -140,9 +142,7 @@ func (b *altairBuilder) Serialize(state *spec.VersionedBeaconState, contentType 
 
 	switch contentType {
 	case http.ContentTypeSSZ:
-		spec := b.clConfig.GetSpecs()
-		dynSsz := dynssz.NewDynSsz(spec)
-		return dynSsz.MarshalSSZ(state.Altair)
+		return b.dynSsz.MarshalSSZ(state.Altair)
 	case http.ContentTypeJSON:
 		return state.Altair.MarshalJSON()
 	default:

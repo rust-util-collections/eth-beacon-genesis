@@ -22,6 +22,7 @@ import (
 type denebBuilder struct {
 	elGenesis       *core.Genesis
 	clConfig        *config.Config
+	dynSsz          *dynssz.DynSsz
 	shadowForkBlock *types.Block
 	validators      []*validators.Validator
 }
@@ -30,6 +31,7 @@ func NewDenebBuilder(elGenesis *core.Genesis, clConfig *config.Config) GenesisBu
 	return &denebBuilder{
 		elGenesis: elGenesis,
 		clConfig:  clConfig,
+		dynSsz:    utils.GetDynSSZ(clConfig),
 	}
 }
 
@@ -118,7 +120,7 @@ func (b *denebBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, error
 			BaseFeePerGas: uint256.NewInt(0),
 		},
 	}
-	genesisBlockBodyRoot, err := genesisBlockBody.HashTreeRoot()
+	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)
 	}
@@ -189,9 +191,7 @@ func (b *denebBuilder) Serialize(state *spec.VersionedBeaconState, contentType h
 
 	switch contentType {
 	case http.ContentTypeSSZ:
-		spec := b.clConfig.GetSpecs()
-		dynSsz := dynssz.NewDynSsz(spec)
-		return dynSsz.MarshalSSZ(state.Deneb)
+		return b.dynSsz.MarshalSSZ(state.Deneb)
 	case http.ContentTypeJSON:
 		return state.Deneb.MarshalJSON()
 	default:

@@ -23,6 +23,7 @@ import (
 type electraBuilder struct {
 	elGenesis       *core.Genesis
 	clConfig        *config.Config
+	dynSsz          *dynssz.DynSsz
 	shadowForkBlock *types.Block
 	validators      []*validators.Validator
 }
@@ -31,6 +32,7 @@ func NewElectraBuilder(elGenesis *core.Genesis, clConfig *config.Config) Genesis
 	return &electraBuilder{
 		elGenesis: elGenesis,
 		clConfig:  clConfig,
+		dynSsz:    utils.GetDynSSZ(clConfig),
 	}
 }
 
@@ -120,7 +122,7 @@ func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, err
 		},
 		ExecutionRequests: &electra.ExecutionRequests{},
 	}
-	genesisBlockBodyRoot, err := genesisBlockBody.HashTreeRoot()
+	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)
 	}
@@ -191,9 +193,7 @@ func (b *electraBuilder) Serialize(state *spec.VersionedBeaconState, contentType
 
 	switch contentType {
 	case http.ContentTypeSSZ:
-		spec := b.clConfig.GetSpecs()
-		dynSsz := dynssz.NewDynSsz(spec)
-		return dynSsz.MarshalSSZ(state.Electra)
+		return b.dynSsz.MarshalSSZ(state.Electra)
 	case http.ContentTypeJSON:
 		return state.Electra.MarshalJSON()
 	default:

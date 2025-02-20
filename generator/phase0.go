@@ -18,6 +18,7 @@ import (
 type phase0Builder struct {
 	elGenesis       *core.Genesis
 	clConfig        *config.Config
+	dynSsz          *dynssz.DynSsz
 	shadowForkBlock *types.Block
 	validators      []*validators.Validator
 }
@@ -26,6 +27,7 @@ func NewPhase0Builder(elGenesis *core.Genesis, clConfig *config.Config) GenesisB
 	return &phase0Builder{
 		elGenesis: elGenesis,
 		clConfig:  clConfig,
+		dynSsz:    utils.GetDynSSZ(clConfig),
 	}
 }
 
@@ -60,7 +62,7 @@ func (b *phase0Builder) BuildState(quiet bool) (*spec.VersionedBeaconState, erro
 			BlockHash: make([]byte, 32),
 		},
 	}
-	genesisBlockBodyRoot, err := genesisBlockBody.HashTreeRoot()
+	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)
 	}
@@ -120,9 +122,7 @@ func (b *phase0Builder) Serialize(state *spec.VersionedBeaconState, contentType 
 
 	switch contentType {
 	case http.ContentTypeSSZ:
-		spec := b.clConfig.GetSpecs()
-		dynSsz := dynssz.NewDynSsz(spec)
-		return dynSsz.MarshalSSZ(state.Phase0)
+		return b.dynSsz.MarshalSSZ(state.Phase0)
 	case http.ContentTypeJSON:
 		return state.Phase0.MarshalJSON()
 	default:
