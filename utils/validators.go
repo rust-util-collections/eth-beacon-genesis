@@ -22,8 +22,8 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 		val := validators[i]
 
 		effectiveBalance := phase0.Gwei(0)
-		if val.EffectiveBalance != nil {
-			effectiveBalance = phase0.Gwei(*val.EffectiveBalance)
+		if val.Balance != nil {
+			effectiveBalance = phase0.Gwei(*val.Balance)
 		} else {
 			effectiveBalance = maxEffectiveBalance
 		}
@@ -71,10 +71,15 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 	return clValidators, validatorsRoot
 }
 
-func GetGenesisBalances(validators []*phase0.Validator) []phase0.Gwei {
+func GetGenesisBalances(config *config.Config, validators []*validators.Validator) []phase0.Gwei {
+	maxEffectiveBalance := phase0.Gwei(config.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000))
 	balances := make([]phase0.Gwei, len(validators))
 	for i, validator := range validators {
-		balances[i] = phase0.Gwei(validator.EffectiveBalance)
+		if validator.Balance != nil {
+			balances[i] = phase0.Gwei(*validator.Balance)
+		} else {
+			balances[i] = maxEffectiveBalance
+		}
 	}
 	return balances
 }

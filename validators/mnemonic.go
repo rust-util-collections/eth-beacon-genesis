@@ -93,7 +93,7 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string, quiet bool) ([]*Va
 
 				// Max effective balance by default for activation
 				if mnemonicSrc.Balance > 0 {
-					data.EffectiveBalance = &mnemonicSrc.Balance
+					data.Balance = &mnemonicSrc.Balance
 				}
 
 				validators[valIndex] = data

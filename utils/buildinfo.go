@@ -6,7 +6,7 @@ var BuildVersion string
 var BuildRelease string
 var Buildtime string
 
-func GetExplorerVersion() string {
+func GetBuildVersion() string {
 	if BuildRelease == "" {
 		return fmt.Sprintf("git-%v", BuildVersion)
 	} else {

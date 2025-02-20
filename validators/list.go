@@ -75,7 +75,7 @@ func LoadValidatorsFromFile(validatorsConfigPath string) ([]*Validator, error) {
 			if err != nil {
 				return nil, err
 			}
-			validatorEntry.EffectiveBalance = &balance
+			validatorEntry.Balance = &balance
 		}
 
 		validators = append(validators, validatorEntry)

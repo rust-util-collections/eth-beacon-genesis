@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/attestantio/go-eth2-client/http"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/urfave/cli/v3"
 
 	"github.com/ethpandaops/eth-beacon-genesis/config"
 	"github.com/ethpandaops/eth-beacon-genesis/eth1"
 	"github.com/ethpandaops/eth-beacon-genesis/generator"
+	"github.com/ethpandaops/eth-beacon-genesis/utils"
 	"github.com/ethpandaops/eth-beacon-genesis/validators"
 )
 
@@ -33,6 +36,14 @@ var (
 	validatorsFileFlag = &cli.StringFlag{
 		Name:  "additional-validators",
 		Usage: "Path to the file with a list of additional genesis validators validators",
+	}
+	shadowForkBlockFlag = &cli.StringFlag{
+		Name:  "shadow-fork-block",
+		Usage: "Path to the file with a execution block to create a shadow fork from",
+	}
+	shadowForkRPCFlag = &cli.StringFlag{
+		Name:  "shadow-fork-rpc",
+		Usage: "Execution RPC URL to fetch the block to create a shadow fork from",
 	}
 	stateOutputFlag = &cli.StringFlag{
 		Name:  "state-output",
@@ -58,15 +69,25 @@ var (
 				Usage: "Generate a devnet genesis state",
 				Flags: []cli.Flag{
 					eth1ConfigFlag, configFlag, mnemonicsFileFlag, validatorsFileFlag,
-					stateOutputFlag, jsonOutputFlag, quietFlag,
+					shadowForkBlockFlag, shadowForkRPCFlag, stateOutputFlag, jsonOutputFlag,
+					quietFlag,
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return runDevnet(ctx, cmd)
 				},
-				UsageText: "shamir-msg split [options]",
+				UsageText: "eth-beacon-genesis devnet [options]",
+			},
+			{
+				Name:  "version",
+				Usage: "Print the version of the application",
+				Flags: []cli.Flag{},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					fmt.Printf("eth-beacon-genesis version %s\n", utils.GetBuildVersion())
+					return nil
+				},
 			},
 		},
-		DefaultCommand: "run",
+		DefaultCommand: "devnet",
 	}
 )
 
@@ -76,11 +97,13 @@ func main() {
 	}
 }
 
-func runDevnet(_ context.Context, cmd *cli.Command) error {
+func runDevnet(ctx context.Context, cmd *cli.Command) error {
 	eth1Config := cmd.String(eth1ConfigFlag.Name)
 	eth2Config := cmd.String(configFlag.Name)
 	mnemonicsFile := cmd.String(mnemonicsFileFlag.Name)
 	validatorsFile := cmd.String(validatorsFileFlag.Name)
+	shadowForkBlock := cmd.String(shadowForkBlockFlag.Name)
+	shadowForkRPC := cmd.String(shadowForkRPCFlag.Name)
 	stateOutputFile := cmd.String(stateOutputFlag.Name)
 	jsonOutputFile := cmd.String(jsonOutputFlag.Name)
 	quiet := cmd.Bool(quietFlag.Name)
@@ -125,6 +148,39 @@ func runDevnet(_ context.Context, cmd *cli.Command) error {
 	builder := generator.NewGenesisBuilder(elGenesis, clConfig)
 	builder.AddValidators(clValidators)
 
+	if shadowForkBlock != "" || shadowForkRPC != "" {
+		var gensisBlock *types.Block
+
+		if shadowForkBlock != "" {
+			blockBytes, err := os.ReadFile(shadowForkBlock)
+			if err != nil {
+				return fmt.Errorf("failed to read shadow fork block: %w", err)
+			}
+
+			// Unmarshal the JSON into a types.Block object
+			var resultData eth1.JSONData
+			err = json.Unmarshal(blockBytes, &resultData)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal JSON: %w", err)
+			}
+
+			// Set the eth1Block value for use later
+			block, err := eth1.ParseEthBlock(resultData.Result)
+			if err != nil {
+				return fmt.Errorf("failed to parse eth1 block: %w", err)
+			}
+
+			gensisBlock = block
+		} else {
+			block, err := eth1.GetBlockFromRPC(ctx, shadowForkRPC)
+			if err != nil {
+				return fmt.Errorf("failed to get shadow fork block: %w", err)
+			}
+			gensisBlock = block
+		}
+
+		builder.SetShadowForkBlock(gensisBlock)
+	}
 	genesisState, err := builder.BuildState()
 	if err != nil {
 		return fmt.Errorf("failed to build genesis: %w", err)

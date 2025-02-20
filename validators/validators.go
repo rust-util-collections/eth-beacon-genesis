@@ -7,5 +7,5 @@ import (
 type Validator struct {
 	PublicKey             phase0.BLSPubKey
 	WithdrawalCredentials []byte
-	EffectiveBalance      *uint64
+	Balance               *uint64
 }

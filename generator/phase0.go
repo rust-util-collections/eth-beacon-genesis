@@ -71,10 +71,15 @@ func (b *phase0Builder) BuildState() (*spec.VersionedBeaconState, error) {
 	blocksPerHistoricalRoot := b.clConfig.GetUintDefault("SLOTS_PER_HISTORICAL_ROOT", 8192)
 	epochsPerSlashingVector := b.clConfig.GetUintDefault("EPOCHS_PER_SLASHINGS_VECTOR", 8192)
 
+	minGenesisTime := b.clConfig.GetUintDefault("MIN_GENESIS_TIME", 0)
+	if minGenesisTime == 0 {
+		minGenesisTime = genesisBlock.Time()
+	}
+
 	genesisState := &phase0.BeaconState{
-		GenesisTime:           genesisBlock.Time() + genesisDelay,
+		GenesisTime:           minGenesisTime + genesisDelay,
 		GenesisValidatorsRoot: validatorsRoot,
-		Fork:                  GetStateForkConfig(spec.DataVersionDeneb, b.clConfig),
+		Fork:                  GetStateForkConfig(spec.DataVersionPhase0, b.clConfig),
 		LatestBlockHeader: &phase0.BeaconBlockHeader{
 			BodyRoot: genesisBlockBodyRoot,
 		},
@@ -90,7 +95,7 @@ func (b *phase0Builder) BuildState() (*spec.VersionedBeaconState, error) {
 		FinalizedCheckpoint:         &phase0.Checkpoint{},
 		RANDAOMixes:                 utils.SeedRandomMixes(phase0.Hash32(genesisBlockHash), b.clConfig),
 		Validators:                  clValidators,
-		Balances:                    utils.GetGenesisBalances(clValidators),
+		Balances:                    utils.GetGenesisBalances(b.clConfig, b.validators),
 		Slashings:                   make([]phase0.Gwei, epochsPerSlashingVector),
 	}
 
