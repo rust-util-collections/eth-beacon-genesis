@@ -12,7 +12,7 @@ import (
 
 type JSONData struct {
 	Jsonrpc string          `json:"jsonrpc"`
-	Id      int             `json:"id"`
+	ID      int             `json:"id"`
 	Result  json.RawMessage `json:"result"`
 }
 
@@ -29,6 +29,7 @@ func GetBlockFromRPC(ctx context.Context, host string) (*types.Block, error) {
 	}
 
 	blockNumberBigint := new(big.Int).SetUint64(blockNumberUint64)
+
 	resultBlock, err := client.BlockByNumber(ctx, blockNumberBigint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the ETH block %s", err)

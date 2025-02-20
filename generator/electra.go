@@ -60,11 +60,13 @@ func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, err
 	baseFee, _ := uint256.FromBig(genesisBlock.BaseFee())
 
 	var withdrawalsRoot phase0.Root
+
 	if genesisBlock.Withdrawals() != nil {
 		root, err := utils.ComputeWithdrawalsRoot(genesisBlock.Withdrawals(), b.clConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed to compute withdrawals root: %w", err)
 		}
+
 		withdrawalsRoot = root
 	}
 
@@ -76,6 +78,7 @@ func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, err
 	if genesisBlock.BlobGasUsed() == nil {
 		return nil, fmt.Errorf("execution-layer Block has missing blob-gas-used field")
 	}
+
 	if genesisBlock.ExcessBlobGas() == nil {
 		return nil, fmt.Errorf("execution-layer Block has missing excess-blob-gas field")
 	}
@@ -106,6 +109,7 @@ func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, err
 
 	syncCommitteeSize := b.clConfig.GetUintDefault("SYNC_COMMITTEE_SIZE", 512)
 	syncCommitteeMaskBytes := syncCommitteeSize / 8
+
 	if syncCommitteeSize%8 != 0 {
 		syncCommitteeMaskBytes++
 	}
@@ -122,6 +126,7 @@ func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, err
 		},
 		ExecutionRequests: &electra.ExecutionRequests{},
 	}
+
 	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)

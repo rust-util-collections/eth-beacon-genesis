@@ -17,8 +17,9 @@ func ComputeWithdrawalsRoot(withdrawals types.Withdrawals, config *config.Config
 	// since that is what we put as withdrawals_root in the CL execution-payload.
 	// Not to be confused with the legacy MPT root in the EL block header.
 	num := uint64(len(withdrawals))
-	max := config.GetUintDefault("MAX_WITHDRAWALS_PER_PAYLOAD", 16)
-	if num > max {
+	maxWithdrawalsPerPayload := config.GetUintDefault("MAX_WITHDRAWALS_PER_PAYLOAD", 16)
+
+	if num > maxWithdrawalsPerPayload {
 		return phase0.Root{}, fmt.Errorf("withdrawals list is too long")
 	}
 
@@ -38,11 +39,14 @@ func ComputeWithdrawalsRoot(withdrawals types.Withdrawals, config *config.Config
 				return err
 			}
 		}
-		hh.MerkleizeWithMixin(0, num, max)
+
+		hh.MerkleizeWithMixin(0, num, maxWithdrawalsPerPayload)
+
 		return nil
 	})
 	if err != nil {
 		return phase0.Root{}, err
 	}
+
 	return phase0.Root(withdrawalsRoot), nil
 }

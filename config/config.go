@@ -36,10 +36,11 @@ func LoadConfig(path string) (*Config, error) {
 
 	for key, value := range values {
 		if strings.HasPrefix(value, "0x") {
-			bytes, err := hex.DecodeString(strings.Replace(value, "0x", "", -1))
+			bytes, err := hex.DecodeString(strings.ReplaceAll(value, "0x", ""))
 			if err != nil {
 				return nil, fmt.Errorf("decoding hex: %w", err)
 			}
+
 			config.values[key] = bytes
 		} else if val, err := strconv.ParseUint(value, 10, 64); err == nil {
 			config.values[key] = val
@@ -66,10 +67,11 @@ func LoadConfig(path string) (*Config, error) {
 
 	for key, value := range presets {
 		if strings.HasPrefix(value, "0x") {
-			bytes, err := hex.DecodeString(strings.Replace(value, "0x", "", -1))
+			bytes, err := hex.DecodeString(strings.ReplaceAll(value, "0x", ""))
 			if err != nil {
 				return nil, fmt.Errorf("decoding hex: %w", err)
 			}
+
 			config.preset[key] = bytes
 		} else if val, err := strconv.ParseUint(value, 10, 64); err == nil {
 			config.preset[key] = val

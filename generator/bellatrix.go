@@ -65,6 +65,7 @@ func (b *bellatrixBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, e
 	if genesisBlock.BlobGasUsed() == nil {
 		return nil, fmt.Errorf("execution-layer Block has missing blob-gas-used field")
 	}
+
 	if genesisBlock.ExcessBlobGas() == nil {
 		return nil, fmt.Errorf("execution-layer Block has missing excess-blob-gas field")
 	}
@@ -97,6 +98,7 @@ func (b *bellatrixBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, e
 
 	syncCommitteeSize := b.clConfig.GetUintDefault("SYNC_COMMITTEE_SIZE", 512)
 	syncCommitteeMaskBytes := syncCommitteeSize / 8
+
 	if syncCommitteeSize%8 != 0 {
 		syncCommitteeMaskBytes++
 	}
@@ -110,6 +112,7 @@ func (b *bellatrixBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, e
 		},
 		ExecutionPayload: &bellatrix.ExecutionPayload{},
 	}
+
 	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)

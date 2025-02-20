@@ -80,6 +80,7 @@ func GetGenesisForkVersion(clConfig *config.Config) spec.DataVersion {
 			return ForkConfigs[i].Version
 		}
 	}
+
 	return spec.DataVersionPhase0
 }
 
@@ -89,12 +90,15 @@ func GetForkConfig(version spec.DataVersion) *ForkConfig {
 			return &forkConfig
 		}
 	}
+
 	return nil
 }
 
 func GetStateForkConfig(version spec.DataVersion, config *config.Config) *phase0.Fork {
 	thisForkConfig := GetForkConfig(version)
+
 	var prevForkConfig *ForkConfig
+
 	if version == spec.DataVersionPhase0 {
 		prevForkConfig = thisForkConfig
 	} else {
@@ -114,6 +118,7 @@ func GetStateForkConfig(version spec.DataVersion, config *config.Config) *phase0
 func NewGenesisBuilder(elGenesis *core.Genesis, clConfig *config.Config) GenesisBuilder {
 	forkVersion := GetGenesisForkVersion(clConfig)
 	forkConfig := GetForkConfig(forkVersion)
+
 	if forkConfig == nil {
 		return nil
 	}

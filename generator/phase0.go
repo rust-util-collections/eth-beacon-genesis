@@ -62,6 +62,7 @@ func (b *phase0Builder) BuildState(quiet bool) (*spec.VersionedBeaconState, erro
 			BlockHash: make([]byte, 32),
 		},
 	}
+
 	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)

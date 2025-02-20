@@ -3,6 +3,7 @@ package eth1
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -30,6 +31,7 @@ func (tx *rpcTransaction) UnmarshalJSON(msg []byte) error {
 	if err := json.Unmarshal(msg, &tx.tx); err != nil {
 		return err
 	}
+
 	return json.Unmarshal(msg, &tx.txExtraInfo)
 }
 
@@ -55,4 +57,27 @@ func ParseEthBlock(blockData json.RawMessage) (*types.Block, error) {
 		Uncles:       nil,
 		Withdrawals:  body.Withdrawals,
 	}), nil
+}
+
+func LoadBlockFromFile(filePath string) (*types.Block, error) {
+	blockBytes, err2 := os.ReadFile(filePath)
+	if err2 != nil {
+		return nil, fmt.Errorf("failed to read shadow fork block: %w", err2)
+	}
+
+	// Unmarshal the JSON into a types.Block object
+	var resultData JSONData
+
+	err2 = json.Unmarshal(blockBytes, &resultData)
+	if err2 != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err2)
+	}
+
+	// Set the eth1Block value for use later
+	block, err2 := ParseEthBlock(resultData.Result)
+	if err2 != nil {
+		return nil, fmt.Errorf("failed to parse eth1 block: %w", err2)
+	}
+
+	return block, nil
 }

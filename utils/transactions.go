@@ -16,17 +16,20 @@ func ComputeTransactionsRoot(transactions types.Transactions, config *config.Con
 	// since that is what we put as transactions_root in the CL execution-payload.
 	// Not to be confused with the legacy MPT root in the EL block header.
 	num := uint64(len(transactions))
-	max := config.GetUintDefault("MAX_TRANSACTIONS_PER_PAYLOAD", 1048576)
-	if num > max {
+	maxTransactionsPerPayload := config.GetUintDefault("MAX_TRANSACTIONS_PER_PAYLOAD", 1048576)
+
+	if num > maxTransactionsPerPayload {
 		return phase0.Root{}, fmt.Errorf("transactions list is too long")
 	}
 
 	clTransactions := make([]bellatrix.Transaction, len(transactions))
+
 	for i, tx := range transactions {
 		opaqueTx, err := tx.MarshalBinary()
 		if err != nil {
 			return phase0.Root{}, fmt.Errorf("failed to encode tx %d: %w", i, err)
 		}
+
 		clTransactions[i] = opaqueTx
 	}
 
@@ -36,17 +39,22 @@ func ComputeTransactionsRoot(transactions types.Transactions, config *config.Con
 		for i, elem := range clTransactions {
 			elemIndx := hh.Index()
 			byteLen := uint64(len(elem))
+
 			if byteLen > maxBytesPerTx {
 				return fmt.Errorf("transaction %d is too long", i)
 			}
+
 			hh.AppendBytes32(elem)
 			hh.MerkleizeWithMixin(elemIndx, byteLen, (maxBytesPerTx+31)/32)
 		}
-		hh.MerkleizeWithMixin(0, num, max)
+
+		hh.MerkleizeWithMixin(0, num, maxTransactionsPerPayload)
+
 		return nil
 	})
 	if err != nil {
 		return phase0.Root{}, err
 	}
+
 	return phase0.Root(transactionsRoot), nil
 }

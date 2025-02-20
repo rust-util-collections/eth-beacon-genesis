@@ -9,7 +9,9 @@ func HashWithFastSSZHasher(cb func(hh *ssz.Hasher) error) ([32]byte, error) {
 		ssz.DefaultHasherPool.Put(hh)
 		return [32]byte{}, err
 	}
+
 	root, err := hh.HashRoot()
 	ssz.DefaultHasherPool.Put(hh)
+
 	return root, err
 }

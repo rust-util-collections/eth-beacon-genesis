@@ -13,11 +13,13 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 	maxEffectiveBalance := phase0.Gwei(config.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000))
 	maxEffectiveBalanceElectra := phase0.Gwei(config.GetUintDefault("MAX_EFFECTIVE_BALANCE_ELECTRA", 2_048_000_000_000))
 	isElectraActive := false
+
 	if electraActivationEpoch, ok := config.GetUint("ELECTRA_FORK_EPOCH"); ok && electraActivationEpoch == 0 {
 		isElectraActive = true
 	}
 
 	clValidators := make([]*phase0.Validator, 0, len(validators))
+
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
 
@@ -64,7 +66,9 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 				return err
 			}
 		}
+
 		hh.MerkleizeWithMixin(0, uint64(len(clValidators)), maxValidators)
+
 		return nil
 	})
 
@@ -74,6 +78,7 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 func GetGenesisBalances(config *config.Config, validators []*validators.Validator) []phase0.Gwei {
 	maxEffectiveBalance := phase0.Gwei(config.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000))
 	balances := make([]phase0.Gwei, len(validators))
+
 	for i, validator := range validators {
 		if validator.Balance != nil {
 			balances[i] = phase0.Gwei(*validator.Balance)
@@ -81,5 +86,6 @@ func GetGenesisBalances(config *config.Config, validators []*validators.Validato
 			balances[i] = maxEffectiveBalance
 		}
 	}
+
 	return balances
 }

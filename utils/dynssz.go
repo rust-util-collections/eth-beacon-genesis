@@ -8,5 +8,6 @@ import (
 func GetDynSSZ(config *config.Config) *dynssz.DynSsz {
 	spec := config.GetSpecs()
 	dynSsz := dynssz.NewDynSsz(spec)
+
 	return dynSsz
 }

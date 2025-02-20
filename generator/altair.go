@@ -60,6 +60,7 @@ func (b *altairBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, erro
 
 	syncCommitteeSize := b.clConfig.GetUintDefault("SYNC_COMMITTEE_SIZE", 512)
 	syncCommitteeMaskBytes := syncCommitteeSize / 8
+
 	if syncCommitteeSize%8 != 0 {
 		syncCommitteeMaskBytes++
 	}
@@ -72,6 +73,7 @@ func (b *altairBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, erro
 			SyncCommitteeBits: make([]byte, syncCommitteeMaskBytes),
 		},
 	}
+
 	genesisBlockBodyRoot, err := b.dynSsz.HashTreeRoot(genesisBlockBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute genesis block body root: %w", err)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -72,16 +71,14 @@ var (
 					shadowForkBlockFlag, shadowForkRPCFlag, stateOutputFlag, jsonOutputFlag,
 					quietFlag,
 				},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					return runDevnet(ctx, cmd)
-				},
+				Action:    runDevnet,
 				UsageText: "eth-beacon-genesis devnet [options]",
 			},
 			{
 				Name:  "version",
 				Usage: "Print the version of the application",
 				Flags: []cli.Flag{},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
+				Action: func(_ context.Context, _ *cli.Command) error {
 					fmt.Printf("eth-beacon-genesis version %s\n", utils.GetBuildVersion())
 					return nil
 				},
@@ -97,7 +94,7 @@ func main() {
 	}
 }
 
-func runDevnet(ctx context.Context, cmd *cli.Command) error {
+func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo // ignore
 	eth1Config := cmd.String(eth1ConfigFlag.Name)
 	eth2Config := cmd.String(configFlag.Name)
 	mnemonicsFile := cmd.String(mnemonicsFileFlag.Name)
@@ -131,10 +128,11 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	var clValidators []*validators.Validator
+
 	if mnemonicsFile != "" {
-		vals, err := validators.GenerateValidatorsByMnemonic(mnemonicsFile, quiet)
-		if err != nil {
-			return fmt.Errorf("failed to load validators from mnemonics file: %w", err)
+		vals, err2 := validators.GenerateValidatorsByMnemonic(mnemonicsFile, quiet)
+		if err2 != nil {
+			return fmt.Errorf("failed to load validators from mnemonics file: %w", err2)
 		}
 
 		if len(vals) > 0 {
@@ -143,9 +141,9 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if validatorsFile != "" {
-		vals, err := validators.LoadValidatorsFromFile(validatorsFile)
-		if err != nil {
-			return fmt.Errorf("failed to load validators from file: %w", err)
+		vals, err2 := validators.LoadValidatorsFromFile(validatorsFile)
+		if err2 != nil {
+			return fmt.Errorf("failed to load validators from file: %w", err2)
 		}
 
 		if len(vals) > 0 {
@@ -158,8 +156,9 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if !quiet {
-		totalBalance := uint64(0)
 		defaultBalance := clConfig.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000)
+		totalBalance := uint64(0)
+
 		for _, val := range clValidators {
 			if val.Balance != nil {
 				totalBalance += *val.Balance
@@ -167,6 +166,7 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 				totalBalance += defaultBalance
 			}
 		}
+
 		fmt.Printf("loaded %d validators. total balance: %d ETH\n", len(clValidators), totalBalance/1_000_000_000)
 	}
 
@@ -177,42 +177,32 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 		var gensisBlock *types.Block
 
 		if shadowForkBlock != "" {
-			blockBytes, err := os.ReadFile(shadowForkBlock)
-			if err != nil {
-				return fmt.Errorf("failed to read shadow fork block: %w", err)
-			}
-
-			// Unmarshal the JSON into a types.Block object
-			var resultData eth1.JSONData
-			err = json.Unmarshal(blockBytes, &resultData)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal JSON: %w", err)
-			}
-
-			// Set the eth1Block value for use later
-			block, err := eth1.ParseEthBlock(resultData.Result)
-			if err != nil {
-				return fmt.Errorf("failed to parse eth1 block: %w", err)
+			block, err2 := eth1.LoadBlockFromFile(shadowForkBlock)
+			if err2 != nil {
+				return fmt.Errorf("failed to load shadow fork block from file: %w", err)
 			}
 
 			if !quiet {
 				fmt.Printf("loaded shadow fork block from file. hash: %s\n", block.Hash().String())
 			}
+
 			gensisBlock = block
 		} else {
-			block, err := eth1.GetBlockFromRPC(ctx, shadowForkRPC)
-			if err != nil {
-				return fmt.Errorf("failed to get shadow fork block: %w", err)
+			block, err2 := eth1.GetBlockFromRPC(ctx, shadowForkRPC)
+			if err2 != nil {
+				return fmt.Errorf("failed to get shadow fork block: %w", err2)
 			}
 
 			if !quiet {
 				fmt.Printf("loaded shadow fork block from RPC. hash: %s\n", block.Hash().String())
 			}
+
 			gensisBlock = block
 		}
 
 		builder.SetShadowForkBlock(gensisBlock)
 	}
+
 	genesisState, err := builder.BuildState(quiet)
 	if err != nil {
 		return fmt.Errorf("failed to build genesis: %w", err)
@@ -228,7 +218,9 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 			return fmt.Errorf("failed to serialize genesis state: %w", err)
 		}
 
-		os.WriteFile(stateOutputFile, sszData, 0644)
+		if err := os.WriteFile(stateOutputFile, sszData, 0o644); err != nil { //nolint:gosec // no strict permissions needed
+			return fmt.Errorf("failed to write genesis state to SSZ file: %w", err)
+		}
 
 		if !quiet {
 			fmt.Printf("serialized genesis state to SSZ file: %s\n", stateOutputFile)
@@ -241,7 +233,9 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 			return fmt.Errorf("failed to serialize genesis state: %w", err)
 		}
 
-		os.WriteFile(jsonOutputFile, jsonData, 0644)
+		if err := os.WriteFile(jsonOutputFile, jsonData, 0o644); err != nil { //nolint:gosec // no strict permissions needed
+			return fmt.Errorf("failed to write genesis state to JSON file: %w", err)
+		}
 
 		if !quiet {
 			fmt.Printf("serialized genesis state to JSON file: %s\n", jsonOutputFile)

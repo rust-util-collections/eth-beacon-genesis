@@ -14,13 +14,15 @@ import (
 
 func GetGenesisSyncCommittee(config *config.Config, validators []*phase0.Validator, randaoMix phase0.Hash32) (*altair.SyncCommittee, error) {
 	activeIndices := make([]phase0.ValidatorIndex, 0, len(validators))
+
 	for index, validator := range validators {
 		if validator.ActivationEpoch == 0 {
-			activeIndices = append(activeIndices, phase0.ValidatorIndex(index))
+			activeIndices = append(activeIndices, phase0.ValidatorIndex(index)) //nolint:gosec // no overflow
 		}
 	}
 
 	var committeeIndices []phase0.ValidatorIndex
+
 	if electraActivationEpoch, ok := config.GetUint("ELECTRA_FORK_EPOCH"); ok && electraActivationEpoch == 0 {
 		committeeIndices = computeGenesisSyncCommitteeIndicesElectra(config, activeIndices, validators, randaoMix)
 	} else {
@@ -32,13 +34,16 @@ func GetGenesisSyncCommittee(config *config.Config, validators []*phase0.Validat
 		AggregatePubkey: phase0.BLSPubKey{},
 	}
 
-	var blsPubs []*blsu.Pubkey
+	blsPubs := make([]*blsu.Pubkey, 0, len(committeeIndices))
+
 	for i, idx := range committeeIndices {
 		var pub blsu.Pubkey
 		if err := pub.Deserialize((*[48]byte)(validators[idx].PublicKey[:])); err != nil {
 			return nil, err
 		}
+
 		syncCommittee.Pubkeys[i] = validators[idx].PublicKey
+
 		blsPubs = append(blsPubs, &pub)
 	}
 
@@ -46,6 +51,7 @@ func GetGenesisSyncCommittee(config *config.Config, validators []*phase0.Validat
 	if err != nil {
 		return nil, fmt.Errorf("failed to aggregate sync-committee bls pubkeys")
 	}
+
 	syncCommittee.AggregatePubkey = phase0.BLSPubKey(blsAggregate.Serialize())
 
 	return syncCommittee, nil
@@ -64,12 +70,20 @@ func computeGenesisSyncCommitteeIndices(config *config.Config, active []phase0.V
 	periodSeed := computeGenesisSeed(randaoMix, 0, phase0.DomainType(domainSyncCommittee))
 
 	var buf [32 + 8]byte
-	copy(buf[0:32], periodSeed[:])
+
 	var h [32]byte
+
+	copy(buf[0:32], periodSeed[:])
+
 	i := phase0.ValidatorIndex(0)
+
 	for uint64(len(syncCommitteeIndices)) < syncCommitteeSize {
-		shuffledIndex := PermuteIndex(uint8(shuffleRoundCount), i%phase0.ValidatorIndex(len(active)),
-			uint64(len(active)), periodSeed)
+		shuffledIndex := PermuteIndex(
+			uint8(shuffleRoundCount), //nolint:gosec // no overflow
+			i%phase0.ValidatorIndex(len(active)),
+			uint64(len(active)),
+			periodSeed,
+		)
 		candidateIndex := active[shuffledIndex]
 		validator := validators[candidateIndex]
 
@@ -80,12 +94,15 @@ func computeGenesisSyncCommitteeIndices(config *config.Config, active []phase0.V
 			binary.LittleEndian.PutUint64(buf[32:32+8], uint64(i/32))
 			h = sha256.Sum256(buf[:])
 		}
+
 		randomByte := h[i%32]
 		if effectiveBalance*0xff >= phase0.Gwei(maxEffectiveBalance)*phase0.Gwei(randomByte) {
 			syncCommitteeIndices = append(syncCommitteeIndices, candidateIndex)
 		}
-		i += 1
+
+		i++
 	}
+
 	return syncCommitteeIndices
 }
 
@@ -98,12 +115,20 @@ func computeGenesisSyncCommitteeIndicesElectra(config *config.Config, active []p
 	periodSeed := computeGenesisSeed(randaoMix, 0, phase0.DomainType(domainSyncCommittee))
 
 	var buf [32 + 8]byte
-	copy(buf[0:32], periodSeed[:])
+
 	var h [32]byte
+
+	copy(buf[0:32], periodSeed[:])
+
 	i := phase0.ValidatorIndex(0)
+
 	for uint64(len(syncCommitteeIndices)) < syncCommitteeSize {
-		shuffledIndex := PermuteIndex(uint8(shuffleRoundCount), i%phase0.ValidatorIndex(len(active)),
-			uint64(len(active)), periodSeed)
+		shuffledIndex := PermuteIndex(
+			uint8(shuffleRoundCount), //nolint:gosec // no overflow
+			i%phase0.ValidatorIndex(len(active)),
+			uint64(len(active)),
+			periodSeed,
+		)
 		candidateIndex := active[shuffledIndex]
 		validator := validators[candidateIndex]
 
@@ -114,13 +139,16 @@ func computeGenesisSyncCommitteeIndicesElectra(config *config.Config, active []p
 			binary.LittleEndian.PutUint64(buf[32:32+8], uint64(i/16))
 			h = sha256.Sum256(buf[:])
 		}
+
 		randomValue := BytesToUint(h[(i%16)*2 : (i%16)*2+2])
 
 		if effectiveBalance*0xffff >= phase0.Gwei(maxEffectiveBalance)*phase0.Gwei(randomValue) {
 			syncCommitteeIndices = append(syncCommitteeIndices, candidateIndex)
 		}
-		i += 1
+
+		i++
 	}
+
 	return syncCommitteeIndices
 }
 
@@ -155,16 +183,20 @@ func innerPermuteIndex(hashFn func([]byte) [32]byte, rounds uint8, input phase0.
 	if rounds == 0 {
 		return input
 	}
+
 	index := uint64(input)
 	buf := make([]byte, hTotalSize)
 	r := uint8(0)
+
 	if !dir {
 		// Start at last round.
 		// Iterating through the rounds in reverse, un-swaps everything, effectively un-shuffling the list.
 		r = rounds - 1
 	}
+
 	// Seed is always the first 32 bytes of the hash input, we never have to change this part of the buffer.
 	copy(buf[:hSeedSize], seed[:])
+
 	for {
 		// spec: pivot = bytes_to_int(hash(seed + int_to_bytes1(round))[0:8]) % list_size
 		// This is the "int_to_bytes1(round)", appended to the seed.
@@ -190,7 +222,7 @@ func innerPermuteIndex(hashFn func([]byte) [32]byte, rounds uint8, input phase0.
 		// - round number is still in 32
 		// - mix in the position for randomness, except the last byte of it,
 		//     which will be used later to select a bit from the resulting hash.
-		binary.LittleEndian.PutUint32(buf[hPivotViewSize:], uint32(position>>8))
+		binary.LittleEndian.PutUint32(buf[hPivotViewSize:], uint32(position>>8)) //nolint:gosec // no overflow
 		source := hashFn(buf)
 		// spec: byte = source[(position % 256) // 8]
 		// Effectively keep the first 5 bits of the byte value of the position,
@@ -219,5 +251,6 @@ func innerPermuteIndex(hashFn func([]byte) [32]byte, rounds uint8, input phase0.
 			r--
 		}
 	}
+
 	return phase0.ValidatorIndex(index)
 }

@@ -6,10 +6,12 @@ import (
 )
 
 func SeedRandomMixes(genesisBlockHash phase0.Hash32, config *config.Config) []phase0.Root {
-	max := config.GetUintDefault("EPOCHS_PER_HISTORICAL_VECTOR", 65536)
-	randomMixes := make([]phase0.Root, max)
+	epochsPerHistoricalVector := config.GetUintDefault("EPOCHS_PER_HISTORICAL_VECTOR", 65536)
+	randomMixes := make([]phase0.Root, epochsPerHistoricalVector)
+
 	for i := range randomMixes {
 		randomMixes[i] = phase0.Root(genesisBlockHash)
 	}
+
 	return randomMixes
 }

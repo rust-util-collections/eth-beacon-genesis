@@ -1,0 +1,51 @@
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  goconst:
+    min-len: 2
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  nolintlint:
+    require-explanation: false
+    require-specific: true
+
+linters:
+  disable-all: true
+  enable:
+    - copyloopvar
+    - bodyclose
+    - dogsled
+    - errcheck
+    - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    - gocyclo
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nolintlint
+    - nakedret
+    - prealloc
+    - revive
+    - staticcheck
+    - stylecheck
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - wsl
+
+run:
+  issues-exit-code: 1
