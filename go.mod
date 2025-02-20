@@ -8,7 +8,7 @@ require (
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/herumi/bls-eth-go-binary v1.31.0
 	github.com/holiman/uint256 v1.3.2
-	github.com/pk910/dynamic-ssz v0.0.5
+	github.com/pk910/dynamic-ssz v0.0.6
 	github.com/protolambda/bls12-381-util v0.1.0
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/urfave/cli/v3 v3.0.0-beta1
@@ -83,5 +83,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
-
-replace github.com/pk910/dynamic-ssz => github.com/pk910/dynamic-ssz v0.0.0-20250218224332-b6fe247b96a3
