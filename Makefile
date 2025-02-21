@@ -11,7 +11,7 @@ GOLDFLAGS += -X 'github.com/ethpandaops/eth-beacon-genesis/utils.BuildRelease="$
 all: test build
 
 test:
-	go test ./...
+	go test -race -coverprofile=coverage.out -covermode=atomic -vet=off ./...
 
 build:
 	@echo version: $(VERSION)

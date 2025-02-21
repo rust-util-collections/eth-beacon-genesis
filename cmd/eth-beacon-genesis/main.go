@@ -8,6 +8,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 
 	"github.com/ethpandaops/eth-beacon-genesis/config"
@@ -105,8 +106,12 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo /
 	jsonOutputFile := cmd.String(jsonOutputFlag.Name)
 	quiet := cmd.Bool(quietFlag.Name)
 
+	if quiet {
+		logrus.SetLevel(logrus.PanicLevel)
+	}
+
 	if !quiet {
-		fmt.Printf("eth-beacon-genesis version: %s\n", utils.GetBuildVersion())
+		logrus.Infof("eth-beacon-genesis version: %s", utils.GetBuildVersion())
 	}
 
 	elGenesis, err := eth1.LoadEth1GenesisConfig(eth1Config)
@@ -114,23 +119,19 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo /
 		return fmt.Errorf("failed to load execution genesis: %w", err)
 	}
 
-	if !quiet {
-		fmt.Printf("loaded execution genesis. chainid: %v\n", elGenesis.Config.ChainID.String())
-	}
+	logrus.Infof("loaded execution genesis. chainid: %v", elGenesis.Config.ChainID.String())
 
 	clConfig, err := config.LoadConfig(eth2Config)
 	if err != nil {
 		return fmt.Errorf("failed to load consensus config: %w", err)
 	}
 
-	if !quiet {
-		fmt.Printf("loaded consensus config. genesis fork version: 0x%x\n", clConfig.GetBytesDefault("GENESIS_FORK_VERSION", []byte{}))
-	}
+	logrus.Infof("loaded consensus config. genesis fork version: 0x%x", clConfig.GetBytesDefault("GENESIS_FORK_VERSION", []byte{}))
 
 	var clValidators []*validators.Validator
 
 	if mnemonicsFile != "" {
-		vals, err2 := validators.GenerateValidatorsByMnemonic(mnemonicsFile, quiet)
+		vals, err2 := validators.GenerateValidatorsByMnemonic(mnemonicsFile)
 		if err2 != nil {
 			return fmt.Errorf("failed to load validators from mnemonics file: %w", err2)
 		}
@@ -155,20 +156,18 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo /
 		return fmt.Errorf("no validators found")
 	}
 
-	if !quiet {
-		defaultBalance := clConfig.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000)
-		totalBalance := uint64(0)
+	defaultBalance := clConfig.GetUintDefault("MAX_EFFECTIVE_BALANCE", 32_000_000_000)
+	totalBalance := uint64(0)
 
-		for _, val := range clValidators {
-			if val.Balance != nil {
-				totalBalance += *val.Balance
-			} else {
-				totalBalance += defaultBalance
-			}
+	for _, val := range clValidators {
+		if val.Balance != nil {
+			totalBalance += *val.Balance
+		} else {
+			totalBalance += defaultBalance
 		}
-
-		fmt.Printf("loaded %d validators. total balance: %d ETH\n", len(clValidators), totalBalance/1_000_000_000)
 	}
+
+	logrus.Infof("loaded %d validators. total balance: %d ETH", len(clValidators), totalBalance/1_000_000_000)
 
 	builder := generator.NewGenesisBuilder(elGenesis, clConfig)
 	builder.AddValidators(clValidators)
@@ -182,9 +181,7 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo /
 				return fmt.Errorf("failed to load shadow fork block from file: %w", err)
 			}
 
-			if !quiet {
-				fmt.Printf("loaded shadow fork block from file. hash: %s\n", block.Hash().String())
-			}
+			logrus.Infof("loaded shadow fork block from file. hash: %s", block.Hash().String())
 
 			gensisBlock = block
 		} else {
@@ -193,9 +190,7 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo /
 				return fmt.Errorf("failed to get shadow fork block: %w", err2)
 			}
 
-			if !quiet {
-				fmt.Printf("loaded shadow fork block from RPC. hash: %s\n", block.Hash().String())
-			}
+			logrus.Infof("loaded shadow fork block from RPC. hash: %s", block.Hash().String())
 
 			gensisBlock = block
 		}
@@ -203,14 +198,12 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo /
 		builder.SetShadowForkBlock(gensisBlock)
 	}
 
-	genesisState, err := builder.BuildState(quiet)
+	genesisState, err := builder.BuildState()
 	if err != nil {
 		return fmt.Errorf("failed to build genesis: %w", err)
 	}
 
-	if !quiet {
-		fmt.Printf("successfully built genesis state.\n")
-	}
+	logrus.Infof("successfully built genesis state.")
 
 	if stateOutputFile != "" {
 		sszData, err := builder.Serialize(genesisState, http.ContentTypeSSZ)
@@ -222,9 +215,7 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo /
 			return fmt.Errorf("failed to write genesis state to SSZ file: %w", err)
 		}
 
-		if !quiet {
-			fmt.Printf("serialized genesis state to SSZ file: %s\n", stateOutputFile)
-		}
+		logrus.Infof("serialized genesis state to SSZ file: %s", stateOutputFile)
 	}
 
 	if jsonOutputFile != "" {

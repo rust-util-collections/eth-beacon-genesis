@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/sirupsen/logrus"
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
@@ -17,7 +18,7 @@ import (
 	e2util "github.com/wealdtech/go-eth2-util"
 )
 
-func GenerateValidatorsByMnemonic(mnemonicsConfigPath string, quiet bool) ([]*Validator, error) {
+func GenerateValidatorsByMnemonic(mnemonicsConfigPath string) ([]*Validator, error) {
 	mnemonics, err := loadMnemonics(mnemonicsConfigPath)
 	if err != nil {
 		return nil, err
@@ -39,9 +40,7 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string, quiet bool) ([]*Va
 
 		var prog int32
 
-		if !quiet {
-			fmt.Printf("processing mnemonic %d, for %d validators\n", m, mnemonicSrc.Count)
-		}
+		logrus.Infof("processing mnemonic %d, for %d validators", m, mnemonicSrc.Count)
 
 		seed, err := seedFromMnemonic(mnemonicSrc.Mnemonic)
 		if err != nil {
@@ -70,7 +69,7 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string, quiet bool) ([]*Va
 						return fmt.Errorf("failed to decode withdrawal address: %w", err)
 					}
 
-					copy(data.WithdrawalCredentials[20:], address)
+					copy(data.WithdrawalCredentials[12:], address)
 
 					if mnemonicSrc.WdPrefix != "" {
 						prefix, err := hex.DecodeString(strings.ReplaceAll(mnemonicSrc.WdPrefix, "0x", ""))
@@ -84,7 +83,12 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string, quiet bool) ([]*Va
 					}
 				} else {
 					// set withdrawal BLS pubkey (0x00 credentials)
-					withdrawSK, err := e2util.PrivateKeyFromSeedAndPath(seed, withdrawalKeyName(idx))
+					wdkeyPath := mnemonicSrc.WdKeyPath
+					if wdkeyPath == "" {
+						wdkeyPath = withdrawalKeyName(idx)
+					}
+
+					withdrawSK, err := e2util.PrivateKeyFromSeedAndPath(seed, wdkeyPath)
 					if err != nil {
 						return err
 					}
@@ -104,8 +108,8 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string, quiet bool) ([]*Va
 				validators[valIndex] = data
 				count := atomic.AddInt32(&prog, 1)
 
-				if count%100 == 0 && !quiet {
-					fmt.Printf("...validator %d/%d\n", prog, mnemonicSrc.Count)
+				if count%100 == 0 {
+					logrus.Infof("...validator %d/%d", count, mnemonicSrc.Count)
 				}
 
 				return nil
@@ -146,6 +150,7 @@ type MnemonicSrc struct {
 	Balance   uint64 `yaml:"balance"`
 	WdAddress string `yaml:"wd_address"`
 	WdPrefix  string `yaml:"wd_prefix"`
+	WdKeyPath string `yaml:"wd_key_path"`
 }
 
 func loadMnemonics(srcPath string) ([]MnemonicSrc, error) {

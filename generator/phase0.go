@@ -8,6 +8,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/sirupsen/logrus"
 
 	"github.com/ethpandaops/eth-beacon-genesis/config"
 	"github.com/ethpandaops/eth-beacon-genesis/utils"
@@ -39,7 +40,7 @@ func (b *phase0Builder) AddValidators(validators []*validators.Validator) {
 	b.validators = append(b.validators, validators...)
 }
 
-func (b *phase0Builder) BuildState(quiet bool) (*spec.VersionedBeaconState, error) {
+func (b *phase0Builder) BuildState() (*spec.VersionedBeaconState, error) {
 	genesisBlock := b.shadowForkBlock
 	if genesisBlock == nil {
 		genesisBlock = b.elGenesis.ToBlock()
@@ -107,11 +108,9 @@ func (b *phase0Builder) BuildState(quiet bool) (*spec.VersionedBeaconState, erro
 		Phase0:  genesisState,
 	}
 
-	if !quiet {
-		fmt.Printf("genesis version: phase0\n")
-		fmt.Printf("genesis time: %v\n", genesisState.GenesisTime)
-		fmt.Printf("genesis validators root: 0x%x\n", genesisState.GenesisValidatorsRoot)
-	}
+	logrus.Infof("genesis version: phase0")
+	logrus.Infof("genesis time: %v", genesisState.GenesisTime)
+	logrus.Infof("genesis validators root: 0x%x", genesisState.GenesisValidatorsRoot)
 
 	return versionedState, nil
 }

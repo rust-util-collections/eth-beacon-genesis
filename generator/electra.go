@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/holiman/uint256"
+	"github.com/sirupsen/logrus"
 
 	"github.com/ethpandaops/eth-beacon-genesis/config"
 	"github.com/ethpandaops/eth-beacon-genesis/utils"
@@ -44,7 +45,7 @@ func (b *electraBuilder) AddValidators(validators []*validators.Validator) {
 	b.validators = append(b.validators, validators...)
 }
 
-func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, error) {
+func (b *electraBuilder) BuildState() (*spec.VersionedBeaconState, error) {
 	genesisBlock := b.shadowForkBlock
 	if genesisBlock == nil {
 		genesisBlock = b.elGenesis.ToBlock()
@@ -182,11 +183,9 @@ func (b *electraBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, err
 		Electra: genesisState,
 	}
 
-	if !quiet {
-		fmt.Printf("genesis version: electra\n")
-		fmt.Printf("genesis time: %v\n", genesisState.GenesisTime)
-		fmt.Printf("genesis validators root: 0x%x\n", genesisState.GenesisValidatorsRoot)
-	}
+	logrus.Infof("genesis version: electra")
+	logrus.Infof("genesis time: %v", genesisState.GenesisTime)
+	logrus.Infof("genesis validators root: 0x%x", genesisState.GenesisValidatorsRoot)
 
 	return versionedState, nil
 }

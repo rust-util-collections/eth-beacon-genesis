@@ -52,7 +52,8 @@ func LoadValidatorsFromFile(validatorsConfigPath string) ([]*Validator, error) {
 
 		pubkeyMap[string(pubKey)] = lineNum
 		validatorEntry := &Validator{
-			PublicKey: phase0.BLSPubKey(pubKey),
+			PublicKey:             phase0.BLSPubKey(pubKey),
+			WithdrawalCredentials: make([]byte, 32),
 		}
 
 		// Withdrawal credentials

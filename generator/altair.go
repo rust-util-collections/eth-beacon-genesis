@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	dynssz "github.com/pk910/dynamic-ssz"
+	"github.com/sirupsen/logrus"
 
 	"github.com/ethpandaops/eth-beacon-genesis/config"
 	"github.com/ethpandaops/eth-beacon-genesis/utils"
@@ -40,7 +41,7 @@ func (b *altairBuilder) AddValidators(validators []*validators.Validator) {
 	b.validators = append(b.validators, validators...)
 }
 
-func (b *altairBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, error) {
+func (b *altairBuilder) BuildState() (*spec.VersionedBeaconState, error) {
 	genesisBlock := b.shadowForkBlock
 	if genesisBlock == nil {
 		genesisBlock = b.elGenesis.ToBlock()
@@ -128,11 +129,9 @@ func (b *altairBuilder) BuildState(quiet bool) (*spec.VersionedBeaconState, erro
 		Altair:  genesisState,
 	}
 
-	if !quiet {
-		fmt.Printf("genesis version: altair\n")
-		fmt.Printf("genesis time: %v\n", genesisState.GenesisTime)
-		fmt.Printf("genesis validators root: 0x%x\n", genesisState.GenesisValidatorsRoot)
-	}
+	logrus.Infof("genesis version: altair")
+	logrus.Infof("genesis time: %v", genesisState.GenesisTime)
+	logrus.Infof("genesis validators root: 0x%x", genesisState.GenesisValidatorsRoot)
 
 	return versionedState, nil
 }
