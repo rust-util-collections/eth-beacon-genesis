@@ -95,7 +95,7 @@ func main() {
 	}
 }
 
-func runDevnet(ctx context.Context, cmd *cli.Command) error { //nolint:gocyclo // ignore
+func runDevnet(ctx context.Context, cmd *cli.Command) error {
 	eth1Config := cmd.String(eth1ConfigFlag.Name)
 	eth2Config := cmd.String(configFlag.Name)
 	mnemonicsFile := cmd.String(mnemonicsFileFlag.Name)

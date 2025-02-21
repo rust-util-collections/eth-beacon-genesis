@@ -12,6 +12,7 @@ import (
 )
 
 func createTestMnemonicsFile(t *testing.T, data string) string {
+	t.Helper()
 	dir := t.TempDir()
 
 	mnemonicsFile, err := os.Create(filepath.Join(dir, "mnemonics.yaml"))
@@ -46,8 +47,15 @@ func TestGenerateValidatorsByMnemonic_Valid(t *testing.T) {
   wd_prefix: "0x02"
 `)
 
-	hbls.Init(hbls.BLS12_381)
-	hbls.SetETHmode(hbls.EthModeLatest)
+	err := hbls.Init(hbls.BLS12_381)
+	if err != nil {
+		t.Fatalf("failed to initialize BLS12-381: %v", err)
+	}
+
+	err = hbls.SetETHmode(hbls.EthModeLatest)
+	if err != nil {
+		t.Fatalf("failed to set ETH mode: %v", err)
+	}
 
 	validators, err := GenerateValidatorsByMnemonic(mnemonicsFile)
 	if err != nil {

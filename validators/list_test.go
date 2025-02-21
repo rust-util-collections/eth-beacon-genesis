@@ -10,6 +10,7 @@ import (
 )
 
 func createTestValidatorsFile(t *testing.T, data string) string {
+	t.Helper()
 	dir := t.TempDir()
 
 	validatorsFile, err := os.Create(filepath.Join(dir, "validators.txt"))
