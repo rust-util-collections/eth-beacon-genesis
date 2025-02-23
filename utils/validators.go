@@ -23,6 +23,10 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
 
+		if val == nil {
+			return nil, phase0.Root{}
+		}
+
 		effectiveBalance := phase0.Gwei(0)
 		if val.Balance != nil {
 			effectiveBalance = phase0.Gwei(*val.Balance)
@@ -60,7 +64,7 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 	}
 
 	maxValidators := config.GetUintDefault("VALIDATOR_REGISTRY_LIMIT", 1099511627776)
-	validatorsRoot, _ := HashWithFastSSZHasher(func(hh *ssz.Hasher) error {
+	validatorsRoot, err := HashWithFastSSZHasher(func(hh *ssz.Hasher) error {
 		for _, elem := range clValidators {
 			if err := elem.HashTreeRootWith(hh); err != nil {
 				return err
@@ -71,6 +75,10 @@ func GetGenesisValidators(config *config.Config, validators []*validators.Valida
 
 		return nil
 	})
+
+	if err != nil {
+		return nil, phase0.Root{}
+	}
 
 	return clValidators, validatorsRoot
 }

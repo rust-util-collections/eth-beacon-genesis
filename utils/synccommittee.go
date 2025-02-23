@@ -69,6 +69,10 @@ func computeGenesisSyncCommitteeIndices(config *config.Config, active []phase0.V
 	syncCommitteeIndices := make([]phase0.ValidatorIndex, 0, syncCommitteeSize)
 	periodSeed := computeGenesisSeed(randaoMix, 0, phase0.DomainType(domainSyncCommittee))
 
+	if len(active) == 0 {
+		return syncCommitteeIndices
+	}
+
 	var buf [32 + 8]byte
 
 	var h [32]byte
@@ -113,6 +117,10 @@ func computeGenesisSyncCommitteeIndicesElectra(config *config.Config, active []p
 	domainSyncCommittee := config.GetBytesDefault("DOMAIN_SYNC_COMMITTEE", []byte{0x07, 0x00, 0x00, 0x00})
 	syncCommitteeIndices := make([]phase0.ValidatorIndex, 0, syncCommitteeSize)
 	periodSeed := computeGenesisSeed(randaoMix, 0, phase0.DomainType(domainSyncCommittee))
+
+	if len(active) == 0 {
+		return syncCommitteeIndices
+	}
 
 	var buf [32 + 8]byte
 

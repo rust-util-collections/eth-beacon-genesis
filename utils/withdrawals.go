@@ -24,7 +24,12 @@ func ComputeWithdrawalsRoot(withdrawals types.Withdrawals, config *config.Config
 	}
 
 	clWithdrawals := make([]capella.Withdrawal, len(withdrawals))
+
 	for i, withdrawal := range withdrawals {
+		if withdrawal == nil {
+			return phase0.Root{}, fmt.Errorf("withdrawal is nil")
+		}
+
 		clWithdrawals[i] = capella.Withdrawal{
 			Index:          capella.WithdrawalIndex(withdrawal.Index),
 			ValidatorIndex: phase0.ValidatorIndex(withdrawal.Validator),
@@ -33,20 +38,15 @@ func ComputeWithdrawalsRoot(withdrawals types.Withdrawals, config *config.Config
 		}
 	}
 
-	withdrawalsRoot, err := HashWithFastSSZHasher(func(hh *ssz.Hasher) error {
+	withdrawalsRoot, _ := HashWithFastSSZHasher(func(hh *ssz.Hasher) error {
 		for _, elem := range clWithdrawals {
-			if err := elem.HashTreeRootWith(hh); err != nil {
-				return err
-			}
+			elem.HashTreeRootWith(hh) //nolint:errcheck // no error possible
 		}
 
 		hh.MerkleizeWithMixin(0, num, maxWithdrawalsPerPayload)
 
 		return nil
 	})
-	if err != nil {
-		return phase0.Root{}, err
-	}
 
 	return phase0.Root(withdrawalsRoot), nil
 }
