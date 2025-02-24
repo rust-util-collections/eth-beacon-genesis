@@ -39,12 +39,13 @@ func TestGenerateValidatorsByMnemonic_Valid(t *testing.T) {
   start: 1
   count: 1
   balance: 64000000000
+  wd_prefix: "0x01"
   wd_address: "0x1234567890abcdef1234567890abcdef12345678"
 - mnemonic: "rare observe fox place unfold bargain cannon direct title sorry rabbit juice body autumn quality decrease mixture transfer crisp unveil path depend brick scissors"
   start: 10
   count: 1
-  wd_address: "0x1234567890abcdef1234567890abcdef12345678"
   wd_prefix: "0x02"
+  wd_address: "0x1234567890abcdef1234567890abcdef12345678"
 `)
 
 	err := hbls.Init(hbls.BLS12_381)
@@ -163,7 +164,7 @@ func TestGenerateValidatorsByMnemonic_InvalidWdAddress(t *testing.T) {
   start: 0
   count: 1
   balance: 32000000000
-  wd_prefix: "0x00"
+  wd_prefix: "0x01"
   wd_address: "invalid_address"
 `)
 

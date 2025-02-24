@@ -62,7 +62,7 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string) ([]*Validator, err
 					WithdrawalCredentials: make([]byte, 32),
 				}
 
-				if mnemonicSrc.WdAddress != "" {
+				if mnemonicSrc.WdPrefix != "" && mnemonicSrc.WdPrefix != "0x00" && mnemonicSrc.WdAddress != "" {
 					// set withdrawal address (0x01 or 0x02 credentials)
 					address, err := hex.DecodeString(strings.ReplaceAll(mnemonicSrc.WdAddress, "0x", ""))
 					if err != nil {
@@ -70,17 +70,7 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string) ([]*Validator, err
 					}
 
 					copy(data.WithdrawalCredentials[12:], address)
-
-					if mnemonicSrc.WdPrefix != "" {
-						prefix, err := hex.DecodeString(strings.ReplaceAll(mnemonicSrc.WdPrefix, "0x", ""))
-						if err != nil {
-							return fmt.Errorf("failed to decode withdrawal prefix: %w", err)
-						}
-
-						copy(data.WithdrawalCredentials, prefix)
-					} else {
-						data.WithdrawalCredentials[0] = 0x01
-					}
+					data.WithdrawalCredentials[0] = 0x01
 				} else {
 					// set withdrawal BLS pubkey (0x00 credentials)
 					wdkeyPath := mnemonicSrc.WdKeyPath
@@ -98,6 +88,15 @@ func GenerateValidatorsByMnemonic(mnemonicsConfigPath string) ([]*Validator, err
 					h.Write(withdrawPub)
 					copy(data.WithdrawalCredentials, h.Sum(nil))
 					data.WithdrawalCredentials[0] = 0x00
+				}
+
+				if mnemonicSrc.WdPrefix != "" {
+					prefix, err := hex.DecodeString(strings.ReplaceAll(mnemonicSrc.WdPrefix, "0x", ""))
+					if err != nil {
+						return fmt.Errorf("failed to decode withdrawal prefix: %w", err)
+					}
+
+					copy(data.WithdrawalCredentials, prefix)
 				}
 
 				// Max effective balance by default for activation
