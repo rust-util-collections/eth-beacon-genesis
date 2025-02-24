@@ -178,7 +178,7 @@ func runDevnet(ctx context.Context, cmd *cli.Command) error {
 		if shadowForkBlock != "" {
 			block, err2 := eth1.LoadBlockFromFile(shadowForkBlock)
 			if err2 != nil {
-				return fmt.Errorf("failed to load shadow fork block from file: %w", err)
+				return fmt.Errorf("failed to load shadow fork block from file: %w", err2)
 			}
 
 			logrus.Infof("loaded shadow fork block from file. hash: %s", block.Hash().String())
