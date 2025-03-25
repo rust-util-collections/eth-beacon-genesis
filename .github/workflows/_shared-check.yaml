@@ -15,7 +15,7 @@ jobs:
     - name: Set up go
       uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
       with:
-        go-version: 1.21.x
+        go-version: 1.24.x
     
     - name: Verify dependencies
       run: go mod verify
@@ -36,7 +36,7 @@ jobs:
       uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
       with:
         # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-        version: v1.64.5
+        version: v2.0.1
 
         # Optional: working directory, useful for monorepos
         # working-directory: somedir

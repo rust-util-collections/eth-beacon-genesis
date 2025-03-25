@@ -1,10 +1,12 @@
 module github.com/ethpandaops/eth-beacon-genesis
 
-go 1.22.4
+go 1.24.0
+
+toolchain go1.24.1
 
 require (
 	github.com/attestantio/go-eth2-client v0.24.1-0.20250219090147-b41ce952806c
-	github.com/ethereum/go-ethereum v1.15.2
+	github.com/ethereum/go-ethereum v1.15.6
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/herumi/bls-eth-go-binary v1.36.4
 	github.com/holiman/uint256 v1.3.2
@@ -14,7 +16,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/urfave/cli/v3 v3.0.0-beta1
 	github.com/wealdtech/go-eth2-util v1.8.2
-	golang.org/x/sync v0.11.0
+	golang.org/x/sync v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -73,10 +75,10 @@ require (
 	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
-	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
