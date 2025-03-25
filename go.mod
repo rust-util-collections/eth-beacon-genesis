@@ -1,10 +1,11 @@
 module github.com/ethpandaops/eth-beacon-genesis
 
-go 1.22.4
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
-	github.com/attestantio/go-eth2-client v0.24.1
+	github.com/attestantio/go-eth2-client v0.24.1-0.20250219090147-b41ce952806c
 	github.com/ethereum/go-ethereum v1.15.6
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/herumi/bls-eth-go-binary v1.36.4
