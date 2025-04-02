@@ -75,14 +75,6 @@ func (b *capellaBuilder) BuildState() (*spec.VersionedBeaconState, error) {
 		return nil, fmt.Errorf("failed to compute transactions root: %w", err)
 	}
 
-	if genesisBlock.BlobGasUsed() == nil {
-		return nil, fmt.Errorf("execution-layer Block has missing blob-gas-used field")
-	}
-
-	if genesisBlock.ExcessBlobGas() == nil {
-		return nil, fmt.Errorf("execution-layer Block has missing excess-blob-gas field")
-	}
-
 	baseFeeBytes := baseFee.Bytes32()
 	for i, j := 0, len(baseFeeBytes)-1; i < j; i, j = i+1, j-1 {
 		baseFeeBytes[i], baseFeeBytes[j] = baseFeeBytes[j], baseFeeBytes[i]
