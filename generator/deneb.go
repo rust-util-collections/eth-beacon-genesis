@@ -75,15 +75,12 @@ func (b *denebBuilder) BuildState() (*spec.VersionedBeaconState, error) {
 		return nil, fmt.Errorf("failed to compute transactions root: %w", err)
 	}
 
-	// Only check blob gas fields for deneb genesis+ blocks
-	if denebForkEpoch, ok := b.clConfig.GetUint("DENEB_FORK_EPOCH"); ok && denebForkEpoch == 0 {
-		if genesisBlock.BlobGasUsed() == nil {
-			return nil, fmt.Errorf("execution-layer Block has missing blob-gas-used field")
-		}
+	if genesisBlock.BlobGasUsed() == nil {
+		return nil, fmt.Errorf("execution-layer Block has missing blob-gas-used field")
+	}
 
-		if genesisBlock.ExcessBlobGas() == nil {
-			return nil, fmt.Errorf("execution-layer Block has missing excess-blob-gas field")
-		}
+	if genesisBlock.ExcessBlobGas() == nil {
+		return nil, fmt.Errorf("execution-layer Block has missing excess-blob-gas field")
 	}
 
 	execHeader := &deneb.ExecutionPayloadHeader{
