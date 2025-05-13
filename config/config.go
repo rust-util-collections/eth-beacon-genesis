@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -29,23 +30,37 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("reading config file: %w", err)
 	}
 
-	values := make(map[string]string)
+	values := make(map[string]interface{})
 	if err := yaml.Unmarshal(data, &values); err != nil {
 		return nil, fmt.Errorf("parsing yaml: %w", err)
 	}
 
-	for key, value := range values {
-		if strings.HasPrefix(value, "0x") {
-			bytes, err := hex.DecodeString(strings.ReplaceAll(value, "0x", ""))
-			if err != nil {
-				return nil, fmt.Errorf("decoding hex: %w", err)
+	for key, val := range values {
+		switch value := val.(type) {
+		case int:
+			if strings.HasSuffix(key, "_FORK_VERSION") {
+				// convert to big endian byte array
+				bytes := make([]byte, 4)
+				binary.BigEndian.PutUint32(bytes, uint32(value)) //nolint:gosec // ignore overflow
+				config.values[key] = bytes
+			} else {
+				config.values[key] = uint64(value) //nolint:gosec // ignore overflow
 			}
-
-			config.values[key] = bytes
-		} else if val, err := strconv.ParseUint(value, 10, 64); err == nil {
-			config.values[key] = val
-		} else {
+		case uint64:
 			config.values[key] = value
+		case string:
+			if strings.HasPrefix(value, "0x") {
+				bytes, err := hex.DecodeString(strings.ReplaceAll(value, "0x", ""))
+				if err != nil {
+					return nil, fmt.Errorf("decoding hex: %w", err)
+				}
+
+				config.values[key] = bytes
+			} else if val, err := strconv.ParseUint(value, 10, 64); err == nil {
+				config.values[key] = val
+			} else {
+				config.values[key] = value
+			}
 		}
 	}
 
