@@ -36,16 +36,19 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	for key, val := range values {
-		if intVal, isInt := val.(int); isInt {
+		switch value := val.(type) {
+		case int:
 			if strings.HasSuffix(key, "_FORK_VERSION") {
 				// convert to big endian byte array
 				bytes := make([]byte, 4)
-				binary.BigEndian.PutUint32(bytes, uint32(intVal))
+				binary.BigEndian.PutUint32(bytes, uint32(value)) //nolint:gosec // ignore overflow
 				config.values[key] = bytes
 			} else {
-				config.values[key] = uint64(intVal)
+				config.values[key] = uint64(value) //nolint:gosec // ignore overflow
 			}
-		} else if value, isString := val.(string); isString {
+		case uint64:
+			config.values[key] = value
+		case string:
 			if strings.HasPrefix(value, "0x") {
 				bytes, err := hex.DecodeString(strings.ReplaceAll(value, "0x", ""))
 				if err != nil {
@@ -53,6 +56,8 @@ func LoadConfig(path string) (*Config, error) {
 				}
 
 				config.values[key] = bytes
+			} else if val, err := strconv.ParseUint(value, 10, 64); err == nil {
+				config.values[key] = val
 			} else {
 				config.values[key] = value
 			}
